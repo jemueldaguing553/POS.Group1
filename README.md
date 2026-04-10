@@ -1,137 +1,233 @@
-Group1 BSCS 1A
--Jemuel Daguing
--Denis Guibao
--Joshua Simbajon
--Angel Paquibot
-Tindahan Ni Maricel POS System 
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: linear-gradient(to right, #1e3c72, #2a5298);
+}
 
- 
-Title & Description
+.container {
+    max-width: 1000px;
+    margin: 40px auto;
+    background: #f5f5f5;
+    border-radius: 15px;
+    padding: 20px;
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
 
-Tindahan Ni Maricel POS System is a simple web-based Point of Sale system developed using HTML, CSS, JavaScript, and Python Flask.
-It allows user authentication through a login module and performs basic sales transactions using a cash payment system.
+.left { 
+    flex: 3;
+    min-width: 300px; 
+}
+.right {
+    flex: 2;
+    background: white;
+    padding: 15px;
+    border-radius: 10px;
+    min-width: 250px; 
+}
 
----
+input {
+    width: 100%;
+    padding: 10px;
+    border-radius: 20px;
+    border: 1px solid #ccc;
+    margin-bottom: 10px;
+    box-sizing: border-box; 
+}
 
- Prerequisites
+.categories button {
+    margin: 3px;
+    padding: 6px 12px;
+    border-radius: 10px;
+    border: none;
+    background: #ddd;
+    cursor: pointer;
+}
 
-Before running this project, make sure you have the following installed:
+.categories .active {
+    background: #4a90e2;
+    color: white;
+}
 
-- Python 3.x
-- Flask
-- Git (for cloning repository)
-- Web browser (Chrome, Edge, etc.)
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
 
-Install Flask using:
+th {
+    text-align: left;
+    padding: 8px;
+    border-bottom: 2px solid #ccc;
+}
 
-pip install flask
+td {
+    padding: 8px;
+    border-bottom: 1px solid #ddd;
+}
 
----
+.add-btn {
+    background: #4a90e2;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 8px;
+    border: none;
+}
 
- Installation
+.proceed-btn {
+    width: 100%;
+    padding: 12px;
+    background: #4a90e2;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    margin-top: 10px;
+}
 
-1. Clone the repository from GitHub:
+.checkout-box {
+    height: 200px;
+    overflow-y: auto;
+}
 
-git clone https://github.com/your-username/pos-system.git
+@media screen and (max-width: 800px) {
+    .container {
+        flex-direction: column; /* stack left and right vertically */
+    }
+    .left, .right {
+        width: 100%;
+    }
+}
+</style>
+</head>
 
-2. Navigate to the project folder:
+<body>
 
-cd pos-system
+<div class="container">
 
-3. Run the Flask application:
+<div class="left">
+    <h2>Tindahan Ni Maricel</h2>
 
-python app.py
+    <input type="text" id="search" placeholder="Search product..." onkeyup="renderProducts()">
 
-4. Open your browser and go to:
+    <div class="categories" id="categoryButtons">
+        <button onclick="filterCategory('All')" class="active">All</button>
+        <button onclick="filterCategory('Groceries')">Groceries</button>
+        <button onclick="filterCategory('Beverages')">Beverages</button>
+        <button onclick="filterCategory('Snacks')">Snacks</button>
+        <button onclick="filterCategory('Household')">Household</button>
+    </div>
 
-http://127.0.0.1:5000
+    <table id="productTable">
+        <thead>
+            <tr>
+                <th>Item</th>
+                <th>Category</th>
+                <th>Price</th>
+                <th>Add</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
 
----
+<div class="right">
+    <h3>Checkout</h3>
 
- Usage
+    <div class="checkout-box">
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Qty</th>
+                    <th>Price</th>
+                </tr>
+            </thead>
+            <tbody id="cart"></tbody>
+        </table>
+    </div>
 
- Login Module
+    <p><strong>Total:</strong> ₱<span id="total">0</span></p>
 
-1. Open the system in browser
-2. Enter the User ID:
+    <p><strong>Cash:</strong></p>
+    <input type="number" id="cash" oninput="calculateChange()">
 
-1001
+    <p><strong>Change:</strong> ₱<span id="change">0</span></p>
 
-3. Click Login
-4. If valid, user is redirected to the POS page
+    <button class="proceed-btn" onclick="checkout()">Proceed</button>
+</div>
 
----
+</div>
 
- Cash Payment Module
+<script>
 
-1. Add items to the cart
-2. Enter the cash amount
-3. System calculates:
-   - Total price
-   - Change
-4. Click Proceed to complete transaction
+if (!localStorage.getItem("loggedIn")) {
+    window.location.href = "/";
+}
 
-Example:
+localStorage.removeItem("cart");
 
-Total: 100
-Cash: 150
-Change: 50
+const products = [
+    {name: "Rice", price: 45, category: "Groceries"},
+    {name: "Soft Drinks", price: 18, category: "Beverages"},
+    {name: "Canned Sardines", price: 20, category: "Groceries"},
+    {name: "Chips", price: 15, category: "Snacks"},
+    {name: "Detergent", price: 25, category: "Household"}
+];
 
----
+let selectedCategory = "All";
+let cart = {};
 
- Module Description
+function renderProducts() {
+    let table = document.querySelector("#productTable tbody");
+    let search = document.getElementById("search").value.toLowerCase();
 
- Module 1: Login Module
+    table.innerHTML = "";
 
-The Login Module handles user authentication before accessing the POS system.
+    products.forEach(p => {
+        if ((selectedCategory === "All" || p.category === selectedCategory) &&
+            p.name.toLowerCase().includes(search)) {
 
-Features:
+            table.innerHTML += `
+            <tr>
+                <td>${p.name}</td>
+                <td>${p.category}</td>
+                <td>₱${p.price}</td>
+                <td><button class="add-btn" onclick="addItem('${p.name}')">Add</button></td>
+            </tr>`;
+        }
+    });
+}
 
-- Accepts User ID input
-- Validates user using predefined credentials
-- Uses Flask backend for routing
-- Stores login session (via localStorage or Flask session)
-- Redirects to POS page after successful login
-- Blocks unauthorized access
+function filterCategory(category) {
+    selectedCategory = category;
 
-Functionality:
+    document.querySelectorAll("#categoryButtons button").forEach(btn => {
+        btn.classList.remove("active");
+        if (btn.innerText === category) btn.classList.add("active");
+    });
 
-- Input validation
-- Conditional checking ("if-else")
-- Page redirection
-- Session handling
+    renderProducts();
+}
 
-Rules:
+function addItem(name) {
+    let product = products.find(p => p.name === name);
 
-- User must enter correct User ID ("1001")
-- Empty input is not allowed
-- Unauthorized users cannot access POS page
+    if (!cart[name]) cart[name] = {qty: 1, price: product.price};
+    else cart[name].qty++;
 
----
+    displayCart();
+}
 
-Module 2: Cash Payment Module
+function displayCart() {
+    let cartTable = document.getElementById("cart");
+    cartTable.innerHTML = "";
 
-The Cash Payment Module manages the transaction process and payment computation.
+    let total = 0;
 
-Features:
-
-- Displays selected items and total price
-- Accepts cash input from user
-- Automatically calculates change
-- Validates sufficient payment
-- Confirms successful transaction
-
-Functionality:
-
-- Arithmetic operations (total and change)
-- Event handling ("oninput", button click)
-- Conditional logic for payment validation
-- Dynamic UI updates
-
-Rules:
-
-- Cash must be greater than or equal to total
-- If cash is insufficient, transaction is denied
-- After successful transaction, cart resets
-
----
+    for (let item in cart) {
+        let data = cart[item];
+        let subtotal = data.qty * data.price;
+        total +
