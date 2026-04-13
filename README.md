@@ -3,7 +3,6 @@ Group1 BSCS 1A
 -Denis Guibao
 -Joshua Simbajon
 -Angel Paquibot
-Tindahan Ni Maricel POS System 
 
  
 Title & Description
