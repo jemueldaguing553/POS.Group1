@@ -32,8 +32,6 @@ pip install flask
 
 1. Clone the repository from GitHub:
 
-git clone https://github.com/your-username/pos-system.git
-
 2. Navigate to the project folder:
 
 cd pos-system
@@ -41,10 +39,6 @@ cd pos-system
 3. Run the Flask application:
 
 python app.py
-
-4. Open your browser and go to:
-
-http://127.0.0.1:5000
 
 ---
 
