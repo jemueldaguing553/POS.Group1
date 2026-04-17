@@ -1,104 +1,194 @@
 <!DOCTYPE html>
-</body>
-</html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SBPOSS</title>
+
 <style>
+* {
+    box-sizing: border-box;
+}
+
 body {
-    font-family: Arial, sans-serif;
-    background: linear-gradient(to right, #1e3c72, #2a5298);
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background: #2f80ed;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .container {
-    max-width: 1000px;
-    margin: 40px auto;
-    background: #f5f5f5;
-    border-radius: 15px;
-    padding: 20px;
+    width: 1100px;
+    height: 650px;
+    background: #f4f7fb;
+    border-radius: 18px;
     display: flex;
-    gap: 20px;
-    flex-wrap: wrap;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
 }
 
-.left { 
-    flex: 3;
-    min-width: 300px; 
-}
-.right {
-    flex: 2;
-    background: white;
+.sidebar {
+    width: 200px;
+    background: #e9eef5;
     padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.menu-btn {
+    padding: 10px;
     border-radius: 10px;
-    min-width: 250px; 
+    background: white;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.menu-btn.active {
+    background: #2f80ed;
+    color: white;
+}
+
+.logout {
+    margin-top: auto;
+}
+
+.main {
+    flex: 1;
+    display: flex;
+    padding: 15px;
+    gap: 15px;
+}
+
+.products {
+    flex: 2;
+    display: flex;
+    flex-direction: column;
+}
+
+h2 {
+    margin: 0 0 10px;
 }
 
 input {
-    width: 100%;
     padding: 10px;
-    border-radius: 20px;
-    border: 1px solid #ccc;
-    margin-bottom: 10px;
-    box-sizing: border-box; 
-}
-
-.categories button {
-    margin: 3px;
-    padding: 6px 12px;
     border-radius: 10px;
-    border: none;
-    background: #ddd;
-    cursor: pointer;
+    border: 1px solid #ddd;
+    margin-bottom: 10px;
 }
 
-.categories .active {
-    background: #4a90e2;
+.category {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.category button {
+    padding: 6px 10px;
+    border: none;
+    border-radius: 10px;
+    background: #e6edf7;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.category button.active {
+    background: #2f80ed;
     color: white;
+}
+
+/* PRODUCT TABLE */
+.table-box {
+    flex: 1;
+    overflow-y: auto;
 }
 
 table {
     width: 100%;
     border-collapse: collapse;
-}
-
-th {
-    text-align: left;
-    padding: 8px;
-    border-bottom: 2px solid #ccc;
+    font-size: 14px;
 }
 
 td {
-    padding: 8px;
-    border-bottom: 1px solid #ddd;
+    padding: 10px;
+    border-bottom: 1px solid #eee;
 }
 
 .add-btn {
-    background: #4a90e2;
+    background: #2f80ed;
     color: white;
+    border: none;
     padding: 5px 10px;
     border-radius: 8px;
-    border: none;
+    cursor: pointer;
 }
 
-.proceed-btn {
+.cart {
+    width: 320px;
+    background: white;
+    border-radius: 12px;
+    padding: 10px;
+
+    display: flex;
+    flex-direction: column;
+}
+
+.cart table {
     width: 100%;
-    padding: 12px;
-    background: #4a90e2;
-    color: white;
-    border: none;
-    border-radius: 10px;
-    margin-top: 10px;
+    border-collapse: collapse;
+    font-size: 13px;
 }
 
-.checkout-box {
-    height: 200px;
+#cartBody {
+    display: block;
+    max-height: 420px;
     overflow-y: auto;
 }
 
-@media screen and (max-width: 800px) {
-    .container {
-        flex-direction: column; /* stack left and right vertically */
-    }
-    .left, .right {
-        width: 100%;
-    }
+.cart thead, .cart tbody tr {
+    display: table;
+    width: 100%;
+    table-layout: fixed;
+}
+
+.cart-btn {
+    border: none;
+    padding: 3px 6px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.plus { background: #2f80ed; color: white; }
+.minus { background: orange; color: white; }
+.remove { background: red; color: white; }
+
+.bottom-section {
+    margin-top: auto;
+    display: flex;
+    justify-content: space-between; /* total LEFT, button RIGHT */
+    align-items: center;
+    padding-top: 10px;
+}
+
+#total {
+    font-weight: bold;
+    font-size: 15px;
+}
+
+.checkout-btn {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 10px;
+    background: #2f80ed;
+    color: white;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.checkout-btn:hover {
+    opacity: 0.9;
 }
 </style>
 </head>
@@ -107,129 +197,170 @@ td {
 
 <div class="container">
 
-<div class="left">
-    <h2>Tindahan Ni Maricel</h2>
-
-    <input type="text" id="search" placeholder="Search product..." onkeyup="renderProducts()">
-
-    <div class="categories" id="categoryButtons">
-        <button onclick="filterCategory('All')" class="active">All</button>
-        <button onclick="filterCategory('Groceries')">Groceries</button>
-        <button onclick="filterCategory('Beverages')">Beverages</button>
-        <button onclick="filterCategory('Snacks')">Snacks</button>
-        <button onclick="filterCategory('Household')">Household</button>
-    </div>
-
-    <table id="productTable">
-        <thead>
-            <tr>
-                <th>Item</th>
-                <th>Category</th>
-                <th>Price</th>
-                <th>Add</th>
-            </tr>
-        </thead>
-        <tbody></tbody>
-    </table>
+<div class="sidebar">
+    <div class="menu-btn active">🛒 Sales</div>
+    <div class="menu-btn">💳 Payment</div>
+    <div class="menu-btn">🧾 Receipt</div>
+    <div class="menu-btn">📊 Report</div>
+    <div class="menu-btn logout">Logout</div>
 </div>
 
-<div class="right">
-    <h3>Checkout</h3>
+<div class="main">
 
-    <div class="checkout-box">
-        <table>
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Qty</th>
-                    <th>Price</th>
-                </tr>
-            </thead>
-            <tbody id="cart"></tbody>
-        </table>
-    </div>
+<div class="products">
 
-    <p><strong>Total:</strong> ₱<span id="total">0</span></p>
+<h2>SBPOSS</h2>
 
-    <p><strong>Cash:</strong></p>
-    <input type="number" id="cash" oninput="calculateChange()">
+<input type="text" placeholder="Search..." onkeyup="searchProducts(this.value)">
 
-    <p><strong>Change:</strong> ₱<span id="change">0</span></p>
-
-    <button class="proceed-btn" onclick="checkout()">Proceed</button>
+<div class="category">
+    <button class="active" onclick="setCategory('All', this)">All</button>
+    <button onclick="setCategory('Groceries', this)">Groceries</button>
+    <button onclick="setCategory('Beverages', this)">Beverages</button>
+    <button onclick="setCategory('Snacks', this)">Snacks</button>
+    <button onclick="setCategory('Household', this)">Household</button>
 </div>
 
+<div class="table-box">
+<table id="productTable">
+
+<tr data-category="Groceries">
+<td>Rice</td><td>₱45</td>
+<td><button class="add-btn" onclick="addItem('Rice',45)">Add</button></td>
+</tr>
+
+<tr data-category="Beverages">
+<td>Soft Drinks</td><td>₱18</td>
+<td><button class="add-btn" onclick="addItem('Soft Drinks',18)">Add</button></td>
+</tr>
+
+<tr data-category="Groceries">
+<td>Sardines</td><td>₱20</td>
+<td><button class="add-btn" onclick="addItem('Sardines',20)">Add</button></td>
+</tr>
+
+<tr data-category="Snacks">
+<td>Chips</td><td>₱15</td>
+<td><button class="add-btn" onclick="addItem('Chips',15)">Add</button></td>
+</tr>
+
+<tr data-category="Household">
+<td>Detergent</td><td>₱25</td>
+<td><button class="add-btn" onclick="addItem('Detergent',25)">Add</button></td>
+</tr>
+
+</table>
+</div>
+
+</div>
+
+<div class="cart">
+
+<h3>Checkout</h3>
+
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Qty</th>
+<th>Price</th>
+<th>Action</th>
+</tr>
+</thead>
+
+<tbody id="cartBody"></tbody>
+</table>
+
+<div class="bottom-section">
+    <div id="total">Total: ₱0</div>
+    <button class="checkout-btn" onclick="checkout()">Proceed Checkout</button>
+</div>
+
+</div>
+
+</div>
 </div>
 
 <script>
+let cart = [];
 
-if (!localStorage.getItem("loggedIn")) {
-    window.location.href = "/";
+function addItem(name, price) {
+    let item = cart.find(i => i.name === name);
+    if (item) item.qty++;
+    else cart.push({ name, price, qty: 1 });
+    renderCart();
 }
 
-localStorage.removeItem("cart");
-
-const products = [
-    {name: "Rice", price: 45, category: "Groceries"},
-    {name: "Soft Drinks", price: 18, category: "Beverages"},
-    {name: "Canned Sardines", price: 20, category: "Groceries"},
-    {name: "Chips", price: 15, category: "Snacks"},
-    {name: "Detergent", price: 25, category: "Household"}
-];
-
-let selectedCategory = "All";
-let cart = {};
-
-function renderProducts() {
-    let table = document.querySelector("#productTable tbody");
-    let search = document.getElementById("search").value.toLowerCase();
-
-    table.innerHTML = "";
-
-    products.forEach(p => {
-        if ((selectedCategory === "All" || p.category === selectedCategory) &&
-            p.name.toLowerCase().includes(search)) {
-
-            table.innerHTML += `
-            <tr>
-                <td>${p.name}</td>
-                <td>${p.category}</td>
-                <td>₱${p.price}</td>
-                <td><button class="add-btn" onclick="addItem('${p.name}')">Add</button></td>
-            </tr>`;
-        }
-    });
-}
-
-function filterCategory(category) {
-    selectedCategory = category;
-
-    document.querySelectorAll("#categoryButtons button").forEach(btn => {
-        btn.classList.remove("active");
-        if (btn.innerText === category) btn.classList.add("active");
-    });
-
-    renderProducts();
-}
-
-function addItem(name) {
-    let product = products.find(p => p.name === name);
-
-    if (!cart[name]) cart[name] = {qty: 1, price: product.price};
-    else cart[name].qty++;
-
-    displayCart();
-}
-
-function displayCart() {
-    let cartTable = document.getElementById("cart");
-    cartTable.innerHTML = "";
+function renderCart() {
+    let body = document.getElementById("cartBody");
+    body.innerHTML = "";
 
     let total = 0;
 
-    for (let item in cart) {
-        let data = cart[item];
-        let subtotal = data.qty * data.price;
-        total + dhfjhf
-    }
+    cart.forEach(item => {
+        total += item.price * item.qty;
+
+        body.innerHTML += `
+        <tr>
+            <td>${item.name}</td>
+            <td>${item.qty}</td>
+            <td>₱${item.price * item.qty}</td>
+            <td>
+                <button class="cart-btn plus" onclick="changeQty('${item.name}',1)">+</button>
+                <button class="cart-btn minus" onclick="changeQty('${item.name}',-1)">-</button>
+                <button class="cart-btn remove" onclick="removeItem('${item.name}')">x</button>
+            </td>
+        </tr>`;
+    });
+
+    document.getElementById("total").innerText = "Total: ₱" + total;
 }
+
+function changeQty(name, val) {
+    let item = cart.find(i => i.name === name);
+    item.qty += val;
+
+    if (item.qty <= 0) {
+        cart = cart.filter(i => i.name !== name);
+    }
+
+    renderCart();
+}
+
+function removeItem(name) {
+    cart = cart.filter(i => i.name !== name);
+    renderCart();
+}
+
+function setCategory(category, btn) {
+    document.querySelectorAll(".category button")
+        .forEach(b => b.classList.remove("active"));
+
+    btn.classList.add("active");
+
+    document.querySelectorAll("#productTable tr").forEach(row => {
+        let cat = row.getAttribute("data-category");
+        row.style.display = (category === "All" || cat === category) ? "" : "none";
+    });
+}
+
+function searchProducts(value) {
+    value = value.toLowerCase();
+
+    document.querySelectorAll("#productTable tr").forEach(row => {
+        let name = row.cells[0].innerText.toLowerCase();
+        row.style.display = name.includes(value) ? "" : "none";
+    });
+}
+
+function checkout() {
+    if (cart.length === 0) return alert("Cart is empty!");
+
+    alert("Checkout successful!");
+    cart = [];
+    renderCart();
+}
+</script>
+
+</body>
+</html>
