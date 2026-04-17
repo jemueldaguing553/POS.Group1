@@ -8,7 +8,7 @@ Group1 BSCS 1A
 Title & Description
 
 - SBPOSS - Small Bussiness Point of Sale System
-- 
+  
 is a simple web-based Point of Sale system developed using HTML, CSS, JavaScript, and Python Flask.
 It allows user authentication through a login module and performs basic sales transactions using a cash payment system.
 
