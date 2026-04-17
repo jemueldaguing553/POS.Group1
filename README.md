@@ -128,7 +128,7 @@ Prevents mistakes in change calculation
 Used in small retail stores or school POS projects
 
 - Notes
-- 
+  
 The system only accepts cash payments (no card or online payments
 
 Input is done using buttons, not keyboard typing
