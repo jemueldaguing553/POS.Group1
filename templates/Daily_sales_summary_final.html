@@ -1,0 +1,251 @@
+DAILY SALES SUMMARY                        <!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Sales Summary</title>
+
+<style>
+* {
+    box-sizing: border-box;
+    font-family: 'Segoe UI';
+}
+
+body {
+    margin: 0;
+    background: linear-gradient(to right,#1e3c72,#2a5298);
+}
+
+.container {
+    width: 95%;
+    margin: 20px auto;
+    background: #f4f6f9;
+    border-radius: 20px;
+    display: flex;
+    height: calc(100vh - 40px);
+    padding: 15px;
+    gap: 15px;
+}
+
+.sidebar {
+    width: 230px;
+    background: #e9eef5;
+    padding: 20px;
+    border-radius: 15px;
+    display: flex;
+    flex-direction: column;
+}
+
+.menu-btn {
+    padding: 12px;
+    border-radius: 12px;
+    margin-bottom: 10px;
+    background: white;
+    cursor: pointer;
+}
+
+.active {
+    background: linear-gradient(to right,#2f80ed,#56ccf2);
+    color: white;
+}
+
+.main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.header {
+    margin-bottom: 10px;
+}
+
+.header input {
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+    width: 250px;
+}
+
+.table-box {
+    background: white;
+    border-radius: 12px;
+    padding: 15px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.table-scroll {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 12px;
+}
+
+th {
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+tr:nth-child(even) {
+    background: #f9f9f9;
+}
+
+.total-box {
+    margin-top: 8px;
+    text-align: right;
+    font-weight: bold;
+}
+
+.summary-box {
+    margin-top: 12px;
+    background: white;
+    border-radius: 12px;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 16px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="sidebar">
+    <h2>MENU</h2>
+
+    <div class="menu-btn" onclick="goSales()">🛒 Sales</div>
+    <div class="menu-btn" onclick="goPayment()">💳 Payment</div>
+    <div class="menu-btn" onclick="goReceipt()">🧾 Receipt</div>
+    <div class="menu-btn active">📊 Sales Summary</div>
+
+    <div class="menu-btn" onclick="logout()">Logout</div>
+</div>
+
+
+<div class="main">
+
+<h1>SBPOSS History</h1>
+
+<div class="header">
+    <input type="text" id="search" placeholder="Search ID (e.g. 1001)" onkeyup="renderSales()">
+</div>
+
+<div class="table-box">
+
+<div class="table-scroll">
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Date</th>
+<th>Items</th>
+<th>Total</th>
+</tr>
+</thead>
+
+<tbody id="sales-list"></tbody>
+</table>
+</div>
+
+<div class="total-box">
+Total Sales: ₱<span id="grandTotal">0</span>
+</div>
+
+</div>
+
+<div class="summary-box">
+    <div>Transactions Today: <b id="todayCount">0</b></div>
+    <div>Total Today: ₱<b id="todayTotal">0</b></div>
+</div>
+
+</div>
+</div>
+
+<script>
+
+let sales = JSON.parse(localStorage.getItem("sales")) || [];
+
+function isToday(dateString){
+    let today = new Date();
+    let saleDate = new Date(dateString);
+    return today.toDateString() === saleDate.toDateString();
+}
+
+function renderSales(){
+
+let search = document.getElementById("search").value.trim();
+
+let html = "";
+let grandTotal = 0;
+
+let todayTotal = 0;
+let todayCount = 0;
+
+sales.forEach((s, login) => {
+
+    let id = (1000 + login).toString();
+
+    let match = search === "" || id.includes(search);
+
+    if(match){
+
+        let itemsText = "Items";
+        if(s.items){
+            itemsText = s.items.map(i => `${i.name} (${i.qty})`).join(", ");
+        }
+
+        grandTotal += Number(s.total);
+
+        html += `
+        <tr>
+            <td>${id}</td>
+            <td>${s.date}</td>
+            <td>${itemsText}</td>
+            <td>₱${s.total}</td>
+        </tr>`;
+    }
+
+    if(isToday(s.date)){
+        todayTotal += Number(s.total);
+        todayCount++;
+    }
+
+});
+
+document.getElementById("sales-list").innerHTML = html;
+document.getElementById("grandTotal").innerText = grandTotal;
+document.getElementById("todayTotal").innerText = todayTotal;
+document.getElementById("todayCount").innerText = todayCount;
+
+}
+
+function goSales(){ location.href="sales.html"; }
+function goPayment(){ location.href="payment.html"; }
+function goReceipt(){ location.href="receipt.html"; }
+
+function logout(){
+    let confirmLogout = confirm("Are you sure you want to logout?");
+    if(confirmLogout){
+        localStorage.clear();
+        location.href = "login.html";
+    }
+}
+
+renderSales();
+
+</script>
+
+</body>
+</html>

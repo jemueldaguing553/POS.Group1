@@ -1,0 +1,247 @@
+RECEIPT FINAL                                     <!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Receipt</title>
+
+<style>
+* {
+    box-sizing: border-box;
+    font-family: 'Segoe UI';
+}
+
+body {
+    margin: 0;
+    background: linear-gradient(to right,#1e3c72,#2a5298);
+}
+
+.container {
+    width: 95%;
+    margin: 20px auto;
+    background: #f4f6f9;
+    border-radius: 20px;
+    display: flex;
+    height: calc(100vh - 40px);
+    padding: 15px;
+    gap: 15px;
+    overflow: hidden;
+}
+
+.sidebar {
+    width: 240px;
+    background: #e9eef5;
+    padding: 20px;
+    border-radius: 15px;
+    display: flex;
+    flex-direction: column;
+}
+
+.menu-btn {
+    padding: 12px;
+    border-radius: 12px;
+    margin-bottom: 10px;
+    background: white;
+    cursor: pointer;
+}
+
+.active {
+    background: linear-gradient(to right,#2f80ed,#56ccf2);
+    color: white;
+}
+
+.main {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.card {
+    width: 380px;
+    background: white;
+    border-radius: 15px;
+    padding: 25px;
+    text-align: center;
+
+    max-height: 100%;
+    overflow-y: auto;  
+}
+
+.card::-webkit-scrollbar {
+    width: 6px;
+}
+
+.card::-webkit-scrollbar-thumb {
+    background: #2f80ed;
+    border-radius: 10px;
+}
+
+.store-name {
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.small-text {
+    font-size: 14px;
+    color: #555;
+}
+
+hr {
+    border: none;
+    border-top: 1px dashed #ccc;
+    margin: 12px 0;
+}
+
+.table {
+    width: 100%;
+    font-size: 14px;
+    border-collapse: collapse;
+}
+
+.table td:first-child {
+    text-align: left;
+    padding-left: 10px;
+}
+
+.table td {
+    padding: 4px 0;
+}
+
+.right {
+    text-align: right;
+    padding-right: 5px;
+}
+
+.thank {
+    margin-top: 10px;
+    font-weight: 500;
+}
+
+.ok-btn {
+    margin-top: 15px;
+    width: 100%;
+    padding: 12px;
+    border-radius: 10px;
+    border: none;
+    background: linear-gradient(to right,#2f80ed,#56ccf2);
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="sidebar">
+    <h2>MENU</h2>
+
+    <div class="menu-btn" onclick="goSales()">🛒 Sales</div>
+    <div class="menu-btn" onclick="goPayment()">💳 Payment</div>
+    <div class="menu-btn active">🧾 Receipt</div>
+    <div class="menu-btn" onclick="goSummary()">📊 Sales Summary</div>
+    <div class="menu-btn" onclick="logout()">Logout</div>
+</div>
+
+<div class="main">
+
+<div class="card">
+
+<div class="store-name">SBPOSS</div>
+<div class="small-text">Pob, Centro, Clarin, Bohol</div>
+<div class="small-text">Tel: 555 - 1234</div>
+
+<hr>
+
+<div class="store-name">CASH RECEIPT</div>
+
+<hr>
+
+<table class="table">
+<tr>
+<td><b>DESCRIPTION</b></td>
+<td class="right"><b>PRICE</b></td>
+</tr>
+
+<tbody id="items"></tbody>
+</table>
+
+<hr>
+
+<table class="table">
+<tr>
+<td>Total</td>
+<td class="right">₱<span id="total"></span></td>
+</tr>
+<tr>
+<td>Cash</td>
+<td class="right">₱<span id="cash"></span></td>
+</tr>
+<tr>
+<td>Change</td>
+<td class="right">₱<span id="change"></span></td>
+</tr>
+</table>
+
+<hr>
+
+<div class="thank">THANK YOU!</div>
+
+<button class="ok-btn" onclick="done()">OK</button>
+
+</div>
+
+</div>
+</div>
+
+<script>
+
+let sale = JSON.parse(localStorage.getItem("lastSale"));
+
+if(!sale){
+    alert("Please create a transaction first.");
+    location.href="sales.html";
+}
+
+let html = "";
+sale.items.forEach(i=>{
+    html += `
+    <tr>
+        <td>${i.name} x${i.qty}</td>
+        <td class="right">₱${i.price * i.qty}</td>
+    </tr>`;
+});
+
+document.getElementById("items").innerHTML = html;
+document.getElementById("total").innerText = sale.total;
+document.getElementById("cash").innerText = sale.cash;
+document.getElementById("change").innerText = sale.change;
+
+let sales = JSON.parse(localStorage.getItem("sales")) || [];
+sales.push({ total: sale.total, date: sale.date });
+localStorage.setItem("sales", JSON.stringify(sales));
+
+function done(){
+    localStorage.removeItem("cart");
+    localStorage.removeItem("lastSale");
+    location.href = "sales.html";
+}
+
+function goSales(){ location.href="sales.html"; }
+function goPayment(){ location.href="payment.html"; }
+function goSummary(){ location.href="sales-summary.html"; }
+
+function logout(){
+    let confirmLogout = confirm("Are you sure you want to logout?");
+    if(confirmLogout){
+        localStorage.clear();
+        location.href = "login.html";
+    }
+}
+
+</script>
+
+</body>
+</html>
