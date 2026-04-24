@@ -1,0 +1,239 @@
+CASH PAYMENT FINAL                          <!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Payment</title>
+
+<style>
+* { box-sizing: border-box; font-family: 'Segoe UI'; }
+
+body {
+    margin: 0;
+    background: linear-gradient(to right,#1e3c72,#2a5298);
+}
+
+.container {
+    width: 95%;
+    margin: 20px auto;
+    background: #f4f6f9;
+    border-radius: 20px;
+    display: flex;
+
+    min-height: calc(100vh - 40px);
+    max-height: calc(100vh - 40px);
+
+    padding: 15px;
+    gap: 15px;
+    overflow: hidden;
+}
+
+.sidebar {
+    width: 230px;
+    background: #e9eef5;
+    padding: 20px;
+    border-radius: 15px;
+    display: flex;
+    flex-direction: column;
+}
+
+.menu-btn {
+    padding: 12px;
+    border-radius: 12px;
+    margin-bottom: 10px;
+    background: white;
+    cursor: pointer;
+}
+
+.active {
+    background: linear-gradient(to right,#2f80ed,#56ccf2);
+    color:white;
+}
+
+.main {
+    flex:1;
+    display:flex;
+    justify-content:center;
+    align-items:flex-start;
+    padding: 20px 0;
+    overflow-y: auto;
+}
+
+.card {
+    width:400px;
+    background:white;
+    padding:20px;
+    border-radius:15px;
+    text-align:center;
+    margin: auto 0;
+}
+
+input {
+    width:100%;
+    padding:12px;
+    font-size:18px;
+    text-align:right;
+}
+
+.keypad {
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:10px;
+    margin-top:15px;
+}
+
+.keypad button {
+    padding:15px;
+    font-size:18px;
+    border:none;
+    border-radius:8px;
+    background:#dfe6ee;
+    cursor:pointer;
+}
+
+.actions {
+    display:flex;
+    gap:10px;
+    margin-top:15px;
+}
+
+.cancel {
+    flex:1;
+    padding:12px;
+    border-radius:10px;
+    border:none;
+    cursor:pointer;
+}
+
+.confirm {
+    flex:1;
+    padding:12px;
+    border-radius:10px;
+    border:none;
+    background:#2f80ed;
+    color:white;
+    cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="sidebar">
+<h2>MENU</h2>
+
+<div class="menu-btn" onclick="goSales()">🛒 Sales</div>
+<div class="menu-btn active">💳 Payment</div>
+
+<div class="menu-btn" onclick="goReceipt()">🧾 Receipt</div>
+
+<div class="menu-btn" onclick="goSummary()">📊 Sales Summary</div>
+
+<div class="menu-btn" onclick="logout()">Logout</div>
+</div>
+
+<div class="main">
+
+<div class="card">
+
+<h2>PAYMENT</h2>
+<p>Amount Due: <b id="amount"></b></p>
+
+<input type="text" id="cash" readonly>
+
+<p>Change: ₱<span id="change">0</span></p>
+
+<div class="keypad">
+<button onclick="press(1)">1</button>
+<button onclick="press(2)">2</button>
+<button onclick="press(3)">3</button>
+<button onclick="press(4)">4</button>
+<button onclick="press(5)">5</button>
+<button onclick="press(6)">6</button>
+<button onclick="press(7)">7</button>
+<button onclick="press(8)">8</button>
+<button onclick="press(9)">9</button>
+<button onclick="press('00')">00</button>
+<button onclick="press(0)">0</button>
+<button onclick="backspace()">⌫</button>
+</div>
+
+<div class="actions">
+<button class="cancel" onclick="goSales()">Cancel</button>
+<button class="confirm" onclick="pay()">Confirm</button>
+</div>
+
+</div>
+
+</div>
+</div>
+
+<script>
+
+let cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+if(!cart || cart.length === 0){
+    alert("No items found! Please add products first.");
+    location.href = "sales.html";
+}
+
+let total = cart.reduce((sum,i)=>sum + (i.price * i.qty), 0);
+
+document.getElementById("amount").innerText = "₱" + total;
+
+function press(n){
+document.getElementById("cash").value += n;
+compute();
+}
+
+function backspace(){
+let v=document.getElementById("cash");
+v.value=v.value.slice(0,-1);
+compute();
+}
+
+function compute(){
+let cash = Number(document.getElementById("cash").value) || 0;
+let change = cash - total;
+document.getElementById("change").innerText = change >= 0 ? change : 0;
+}
+
+function pay(){
+let cash = Number(document.getElementById("cash").value);
+
+if(cash < total){
+    alert("Not enough cash!");
+    return;
+}
+
+let sale = {
+    items: cart,
+    total: total,
+    cash: cash,
+    change: cash - total,
+    date: new Date().toLocaleString()
+};
+
+localStorage.setItem("lastSale", JSON.stringify(sale));
+location.href = "receipt.html";
+}
+
+function goSales(){ location.href="sales.html"; }
+function goReceipt(){ location.href="receipt.html"; }
+function goSummary(){ location.href="sales-summary.html"; }
+
+function logout(){
+    let confirmLogout = confirm("Are you sure you want to logout?");
+    if(confirmLogout){
+        localStorage.removeItem("cart");
+        localStorage.removeItem("lastSale");
+        alert("Logged out successfully!");
+        location.href = "login.html";
+    }
+}
+
+</script>
+
+</body>
+</html>
