@@ -1,4 +1,4 @@
-Group1 BSCS 1A
+## Group1 BSCS 1A
 
 - Angel Paquibot
 
@@ -10,22 +10,22 @@ Group1 BSCS 1A
 
 ---
  
-Title & Description
+# Title & Description
 
-SBPOSS Small Bussiness Point of Sale System
+# SBPOSS Small Bussiness Point of Sale System
   
 is a simple web-based Point of Sale system developed using HTML, CSS, JavaScript, and Python Flask.
 It allows user authentication through a login module and performs basic sales transactions using a cash payment system.
 
 ---
 
-Module Description
+# Module Description
 
-MODULE 1: SALES TRANSACTION
+# MODULE 1: SALES TRANSACTION
 
 This module is the main sales system of the POS (Point-of-Sale). It allows the user to add products to a cart, manage quantities, and calculate the total amount of the purchase.
 
- Features
+ ## Features
 
 - Displays list of products with prices
 
@@ -43,7 +43,7 @@ This module is the main sales system of the POS (Point-of-Sale). It allows the u
 
 - Checkout button to complete the sale
 
-How it works
+## How it works
 
 - The system shows all available products.
 
@@ -59,7 +59,7 @@ How it works
 
 - After checkout, the cart is cleared and ready for a new transaction.
 
-Usage
+## Usage
 
 - Used by the cashier to process customer purchases
 
@@ -69,7 +69,7 @@ Usage
 
 - Used in small stores or school POS projects
 
-Notes
+## Notes
 
 - If the cart is empty, checkout will not proceed
 
@@ -85,11 +85,11 @@ Notes
 
 ---
 
-MODULE 2: CASH PAYMENT
+# MODULE 2: CASH PAYMENT
 
 This module is a simple cash payment system used in a Point-of-Sale (POS) application. It allows the cashier to enter the amount of cash received from the customer, automatically calculates the change, and confirms the payment.
 
-Features
+## Features
 
 - Displays the total amount to be paid
 
@@ -105,7 +105,7 @@ Features
 
 - Simple navigation back to sales page
 
-How it works
+## How it works
 
 - The system shows the total amount that needs to be paid.
 
@@ -121,7 +121,7 @@ How it works
 
 - After confirmation, the system shows a success message and returns to the sales page.
 
-Usage
+## Usage
 
 - Used by the cashier during checkout
 
@@ -131,7 +131,7 @@ Usage
 
 - Used in small retail stores or school POS projects
 
- Notes
+## Notes
   
 - The system only accepts cash payments (no card or online payments
 
