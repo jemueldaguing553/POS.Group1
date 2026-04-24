@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Login</title>
+
+<style>
+* {
+    box-sizing: border-box;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+body {
+    margin: 0;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(to right, #1e3c72, #2a5298);
+}
+
+.login-box {
+    background: #f4f6f9;
+    padding: 40px;
+    border-radius: 20px;
+    width: 360px;
+    text-align: center;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+
+h1 {
+    margin-bottom: 25px;
+    color: #555;
+}
+
+.input-field {
+    width: 100%;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid #ccc;
+    margin-bottom: 15px;
+}
+
+.login-btn {
+    width: 100%;
+    padding: 12px;
+    border-radius: 12px;
+    border: none;
+    background: linear-gradient(to right,#2f80ed,#56ccf2);
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.footer {
+    margin-top: 20px;
+    color: #666;
+}
+
+.footer span {
+    color: #2f80ed;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: none;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background: white;
+    padding: 25px;
+    border-radius: 15px;
+    width: 340px;
+    text-align: center;
+}
+
+.close {
+    float: right;
+    cursor: pointer;
+    color: red;
+}
+</style>
+</head>
+
+<body>
+
+<div class="login-box">
+    <h1>Login</h1>
+
+    <input type="text" id="userId" class="input-field" placeholder="Enter User ID">
+
+    <button class="login-btn" onclick="login()">Login</button>
+
+    <div class="footer">
+        Don’t have an account? <span onclick="openSignup()">Sign Up</span>
+    </div>
+</div>
+
+<div class="modal" id="signupModal">
+    <div class="modal-content">
+        <span class="close" onclick="closeSignup()">✖</span>
+        <h2>Sign Up</h2>
+
+        <input type="text" id="name" class="input-field" placeholder="Full Name">
+        <input type="text" id="userIdNew" class="input-field" placeholder="Create User ID">
+        <input type="text" id="role" class="input-field" placeholder="Role (Cashier/Admin)">
+
+        <button class="login-btn" onclick="register()">Create Account</button>
+    </div>
+</div>
+
+<script>
+
+let users = JSON.parse(localStorage.getItem("users")) || [];
+
+function login(){
+    let userId = document.getElementById("userId").value.trim();
+
+    if(userId === ""){
+        alert("Enter User ID!");
+        return;
+    }
+
+    let user = users.find(u => u.userId === userId);
+
+    if(!user){
+        alert("User not found! Please sign up.");
+        return;
+    }
+
+    localStorage.setItem("currentUser", userId);
+    window.location.href = "sales.html";
+}
+
+function openSignup(){
+    document.getElementById("signupModal").style.display = "flex";
+}
+
+function closeSignup(){
+    document.getElementById("signupModal").style.display = "none";
+}
+
+function register(){
+    let name = document.getElementById("name").value.trim();
+    let userId = document.getElementById("userIdNew").value.trim();
+    let role = document.getElementById("role").value.trim();
+
+    if(name === "" || userId === "" || role === ""){
+        alert("Please fill all fields!");
+        return;
+    }
+
+    let exists = users.find(u => u.userId === userId);
+    if(exists){
+        alert("User ID already exists!");
+        return;
+    }
+
+    users.push({name, userId, role});
+    localStorage.setItem("users", JSON.stringify(users));
+
+    alert("Account created successfully!");
+    closeSignup();
+}
+
+</script>
+
+</body>
+</html>
