@@ -144,3 +144,123 @@ This module is a simple cash payment system used in a Point-of-Sale (POS) applic
 - This is designed for simple and offline use
 
 ---
+
+# MODULE 3: RECEIPT
+
+- This module displays the final transaction details after a successful payment. It shows a complete summary of purchased items, total amount, cash received, and change, similar to a printed receipt.
+
+## Features
+
+- Displays store information (name, address, contact)
+
+- Shows list of purchased items with quantity and price
+
+- Displays total amount, cash given, and change
+
+- Automatically saves transaction to sales history
+
+- Provides navigation buttons (Sales, Payment, Summary)
+
+- Clears cart after transaction is completed
+
+## How it works
+
+- The system retrieves the latest transaction from storage.
+
+- If no transaction is found, the user is redirected to the Sales page.
+
+- The system displays all purchased items in a table format.
+
+- It calculates and shows the total, cash, and change.
+
+- The transaction is saved to the sales history list.
+
+- When the user clicks OK, the system clears the cart and resets for the next transaction.
+
+## Usage
+
+- Used after completing a payment
+
+- Allows cashier to review the transaction
+
+- Acts as a digital receipt for the customer
+
+- Records sales for tracking and summary
+
+## Notes
+
+- If no transaction exists, the page will redirect to Sales
+
+- All data is stored using localStorage (browser-based)
+
+- Receipt is not printable by default
+
+- Data can be cleared if browser storage is reset
+
+- Used for basic POS systems and school projects
+
+---
+
+# MODULE 4: DAILY SALES SUMMARY
+
+- This module displays the record of all completed transactions. It allows the user to view sales history, search transactions, and monitor daily sales performance.
+
+## Features
+
+- Displays list of all sales transactions
+
+- Shows transaction ID, date, items, and total amount
+
+- Search bar to find transactions by ID
+
+- Automatically calculates total sales
+
+- Displays number of transactions for the current day
+
+- Shows total sales for today
+
+- Scrollable table for viewing many records
+
+## How it works
+
+- The system retrieves all saved sales data from storage.
+
+- Each transaction is assigned a unique ID.
+
+- The system displays all transactions in a table format.
+
+- The user can search for a transaction using the ID.
+
+- The system calculates the grand total of all sales.
+
+- It checks which transactions were made today.
+
+- The system counts today's transactions and calculates today's total sales.
+
+- All data is updated dynamically on the page.
+
+## Usage
+
+- Used by the cashier or admin to review past transactions
+
+- Helps track daily sales performance
+
+- Useful for monitoring income and activity
+
+- Used for reports in small stores or school POS systems
+
+## Notes
+
+- All data is stored using localStorage (browser-based)
+
+- Clearing browser data will erase all sales history
+
+- Transaction IDs are automatically generated
+
+- Search works only by transaction ID
+
+- Date is based on the system's local time
+
+- This module works offline without a database
+
+---
