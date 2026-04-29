@@ -1,36 +1,47 @@
 from flask import Flask, render_template, request, redirect, session, jsonify
 from datetime import datetime
+from abc import ABC, abstractmethod   # # Abstraction
 
 app = Flask(__name__)
 app.secret_key = "secret123"
 
 
-# ====== MODELS ======
+# ====== ABSTRACT CLASS ======
+class Person(ABC):
+    def __init__(self, name, user_id):
+        self._name = name
+        self._user_id = user_id
 
-class User:
+    @abstractmethod
+    def get_role(self):
+        pass
+
+
+# ====== USER (INHERITANCE) ======
+class User(Person):
     def __init__(self, name, user_id, role):
-        self.__name = name
-        self.__user_id = user_id
+        super().__init__(name, user_id)  # # inheritance using super
         self.__role = role
 
-    # GETTERS
+    # # ENCAPSULATION (getters)
     def get_name(self):
-        return self.__name
+        return self._name
 
     def get_user_id(self):
-        return self.__user_id
+        return self._user_id
 
     def get_role(self):
         return self.__role
 
-    # SETTERS
+    # # setters
     def set_name(self, name):
-        self.__name = name
+        self._name = name
 
     def set_role(self, role):
         self.__role = role
 
 
+# ====== PRODUCT ======
 class Product:
     def __init__(self, name, category, price):
         self.__name = name
@@ -47,6 +58,7 @@ class Product:
         return self.__price
 
 
+# ====== CART ITEM ======
 class CartItem:
     def __init__(self, product, qty=1):
         self.__product = product
@@ -61,17 +73,34 @@ class CartItem:
     def set_qty(self, qty):
         self.__qty = qty
 
+    # # POLYMORPHISM (method overriding example later)
     def get_total(self):
         return self.__product.get_price() * self.__qty
 
 
+# ====== DISCOUNT CART ITEM (POLYMORPHISM - OVERRIDING) ======
+class DiscountCartItem(CartItem):
+    def __init__(self, product, qty=1, discount=0.1):
+        super().__init__(product, qty)
+        self.__discount = discount
+
+    def get_total(self):  # # method overriding
+        original = super().get_total()
+        return original - (original * self.__discount)
+
+
+# ====== SALE ======
 class Sale:
     def __init__(self, items, cash):
         self.__items = items
         self.__cash = cash
-        self.__total = sum(i.get_total() for i in items)
+        self.__total = self.calculate_total()  # # polymorphism usage
         self.__change = cash - self.__total
         self.__date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    # # POLYMORPHISM (method overloading style using default param)
+    def calculate_total(self, extra_fee=0):
+        return sum(i.get_total() for i in self.__items) + extra_fee
 
     def get_items(self):
         return self.__items
@@ -89,6 +118,7 @@ class Sale:
         return self.__date
 
 
+# ====== STORE ======
 class Store:
     def __init__(self):
         self.__users = []
@@ -169,7 +199,6 @@ def register():
 def sales_page():
     products = store.get_products()
 
-    # convert objects → dict for HTML
     product_list = [
         {
             "name": p.get_name(),
@@ -188,8 +217,10 @@ def add_to_cart():
     data = request.json
     name = data["name"]
 
-    # find product
     product = next((p for p in store.get_products() if p.get_name() == name), None)
+
+    if not product:
+        return jsonify({"error": "Product not found"}), 404  # # FIXED ERROR HANDLING
 
     cart = session.get("cart", [])
 
@@ -212,7 +243,6 @@ def add_to_cart():
 @app.route("/payment")
 def payment():
     cart = session.get("cart", [])
-
     total = sum(i["price"] * i["qty"] for i in cart)
 
     return render_template("payment.html", total=total)
@@ -228,7 +258,12 @@ def pay():
 
     for c in cart_data:
         product = Product(c["name"], "", c["price"])
-        items.append(CartItem(product, c["qty"]))
+
+        # # Example: use polymorphism (normal vs discounted)
+        if c["qty"] >= 5:
+            items.append(DiscountCartItem(product, c["qty"]))  # # overriding used
+        else:
+            items.append(CartItem(product, c["qty"]))
 
     sale = Sale(items, cash)
 
@@ -237,7 +272,6 @@ def pay():
 
     store.add_sale(sale)
 
-    # convert sale to dict for template
     session["lastSale"] = {
         "items": [
             {
@@ -268,13 +302,13 @@ def receipt():
 # ====== SUMMARY ======
 @app.route("/summary")
 def summary():
-    sales_data = []
-
-    for s in store.get_sales():
-        sales_data.append({
+    sales_data = [
+        {
             "total": s.get_total(),
             "date": s.get_date()
-        })
+        }
+        for s in store.get_sales()
+    ]
 
     return render_template("sales-summary.html", sales=sales_data)
 
