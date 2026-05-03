@@ -4,16 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SBPOSS - Login</title>
+
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
         }
+
         .login-container {
             background: white;
             padding: 40px;
@@ -21,21 +24,40 @@
             box-shadow: 0 10px 25px rgba(0,0,0,0.2);
             width: 350px;
         }
+
         h1 { text-align: center; color: #333; margin-bottom: 10px; }
-        .subtitle { text-align: center; color: #666; margin-bottom: 30px; font-size: 14px; }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
         .form-group { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 5px; color: #555; font-weight: 600; }
-        input[type="text"], input[type="password"] {
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: 600;
+        }
+
+        input[type="text"],
+        input[type="password"],
+        input[type="email"] {
             width: 100%;
             padding: 12px;
             border: 2px solid #ddd;
             border-radius: 5px;
             font-size: 16px;
         }
-        input[type="text"]:focus, input[type="password"]:focus {
+
+        input:focus {
             border-color: #667eea;
             outline: none;
         }
+
         button {
             width: 100%;
             padding: 12px;
@@ -47,29 +69,94 @@
             cursor: pointer;
             font-weight: 600;
         }
+
         button:hover { background: #5568d3; }
-        .error { color: #e74c3c; text-align: center; margin-top: 15px; }
+
+        .links {
+            margin-top: 18px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .links a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .links a:hover {
+            text-decoration: underline;
+        }
+
+        .divider {
+            margin: 8px 0;
+            color: #999;
+        }
+
+        .error {
+            color: #e74c3c;
+            text-align: center;
+            margin-top: 15px;
+            font-size: 14px;
+        }
+
+        .success {
+            color: #27ae60;
+            text-align: center;
+            margin-top: 15px;
+            font-size: 14px;
+        }
     </style>
-<base target="_blank">
+
+    <base target="_blank">
 </head>
+
 <body>
     <div class="login-container">
+
         <h1>SBPOSS</h1>
         <p class="subtitle">Small Business Point of Sale System</p>
+
+        <!-- LOGIN FORM -->
         <form method="POST" action="/login">
             <div class="form-group">
                 <label>Username</label>
-                <input type="text" name="username" placeholder="Enter username" required>
+                <input 
+                    type="text" 
+                    name="username" 
+                    placeholder="Enter username" 
+                    required
+                >
             </div>
+
             <div class="form-group">
                 <label>Password</label>
-                <input type="password" name="password" placeholder="Enter password" required>
+                <input 
+                    type="password" 
+                    name="password" 
+                    placeholder="Enter password" 
+                    required
+                >
             </div>
+
             <button type="submit">Login</button>
         </form>
+
+        <div class="links">
+            <a href="/forgotPassword" target="_self">Forgot Password?</a>
+            <div class="divider">or</div>
+            <span>Don't have an account?</span>
+            <a href="/signUp" target="_self">Sign Up</a>
+        </div>
+
         {% if error %}
         <p class="error">{{ error }}</p>
         {% endif %}
+
+        {% if success %}
+        <p class="success">{{ success }}</p>
+        {% endif %}
+
     </div>
 </body>
 </html>

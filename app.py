@@ -256,7 +256,7 @@ class BasePOS(POSOperations):
         """Initialize default product catalog."""
         self._products = [
             Product("P001", "Milo", 10.00, "Beverages", 40),
-            Product("P002", "Youngs Twon Sardines", 26.00, "Food", 50),
+            Product("P002", "Youngs Town Sardines", 26.00, "Food", 50),
             Product("P003", "Bearbrand", 13.00, "Beverages", 45),
             Product("P004", "Kopiko Blanca Twin pack", 16.00, "Beverages", 40),
             Product("P005", "Shampoo", 8.00, "Personal Care", 60),
@@ -429,8 +429,11 @@ class POSController:
 # APPLICATION SETUP - Singleton instances for single-user access
 # =============================================================================
 
-# Single user for authentication
+# Users for authentication. New signups are stored in memory for this app run.
 cashier_user = User("cashier", "1001", "Cashier")
+users = {
+    cashier_user.username: cashier_user
+}
 
 # Single POS system instance (single-user design)
 pos_system = POSSystem()
@@ -454,13 +457,57 @@ def login():
     if request.method == "POST":
         username = request.form.get("username", "")
         password = request.form.get("password", "")
-        if cashier_user.authenticate(username, password):
+        user = users.get(username)
+        if user and user.authenticate(username, password):
             session["logged_in"] = True
-            session["username"] = cashier_user.username
+            session["username"] = user.username
             return redirect(url_for("sales"))
         else:
             error = "Invalid username or password"
     return render_template("login.html", error=error)
+
+
+@app.route("/signUp", methods=["GET"])
+def sign_up_page():
+    return render_template("signUp.html")
+
+
+@app.route("/signup", methods=["POST"])
+def signup():
+    full_name = request.form.get("fullname", "").strip()
+    username = request.form.get("username", "").strip()
+    password = request.form.get("password", "")
+    confirm_password = request.form.get("confirm_password", "")
+
+    if not full_name or not username or not password:
+        return render_template("signUp.html", error="Please fill in all required fields")
+
+    if password != confirm_password:
+        return render_template("signUp.html", error="Passwords do not match")
+
+    if username in users:
+        return render_template("signUp.html", error="Username already exists")
+
+    users[username] = User(username, password, full_name)
+    return render_template("signUp.html", success="Account created successfully. You can now log in.")
+
+
+@app.route("/forgotPassword", methods=["GET"])
+def forgot_password_page():
+    return render_template("forgotPassword.html")
+
+
+@app.route("/forgot-password", methods=["POST"])
+def forgot_password():
+    email = request.form.get("email", "").strip()
+
+    if not email:
+        return render_template("forgotPassword.html", error="Please enter your email address")
+
+    return render_template(
+        "forgotPassword.html",
+        success="If the email is registered, password reset instructions will be sent."
+    )
 
 
 @app.route("/logout", methods=["POST"])
@@ -609,7 +656,6 @@ def summary():
         all_total=all_summary["total"],
         search_id=search_id
     )
-
 
 # For Vercel deployment
 if __name__ == "__main__":
