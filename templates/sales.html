@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SBPOSS - Sales Transaction</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f6fa;
+        }
+        .header {
+            background: #2c3e50;
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 { font-size: 20px; }
+        .nav form { display: inline; }
+        .nav button {
+            background: transparent;
+            color: white;
+            border: 1px solid white;
+            padding: 8px 15px;
+            margin-left: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            width: auto;
+            font-size: 14px;
+        }
+        .nav button:hover { background: white; color: #2c3e50; }
+        .container {
+            display: flex;
+            padding: 20px;
+            gap: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .products-section {
+            flex: 2;
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .cart-section {
+            flex: 1;
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+        }
+        .filters {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .filters input[type="text"] {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .filters button {
+            padding: 10px 20px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            width: auto;
+            font-size: 14px;
+        }
+        .category-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .category-buttons form { display: inline; }
+        .category-buttons button {
+            padding: 8px 16px;
+            background: #ecf0f1;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            color: #2c3e50;
+            width: auto;
+            font-size: 14px;
+        }
+        .category-buttons button.active {
+            background: #3498db;
+            color: white;
+        }
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        .product-card {
+            border: 2px solid #ecf0f1;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            transition: border-color 0.3s;
+        }
+        .product-card:hover { border-color: #3498db; }
+        .product-name { font-weight: 600; color: #2c3e50; margin-bottom: 5px; font-size: 14px; }
+        .product-price { color: #27ae60; font-size: 18px; font-weight: bold; margin-bottom: 10px; }
+        .product-stock { color: #7f8c8d; font-size: 12px; margin-bottom: 10px; }
+        .product-card form { display: inline; }
+        .product-card button {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            width: auto;
+            font-size: 14px;
+        }
+        .product-card button:hover { background: #229954; }
+        .cart-title { font-size: 18px; margin-bottom: 15px; color: #2c3e50; font-weight: 600; }
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #ecf0f1;
+        }
+        .cart-item-info { flex: 1; }
+        .cart-item-name { font-weight: 600; font-size: 14px; }
+        .cart-item-price { color: #7f8c8d; font-size: 13px; }
+        .qty-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .qty-controls form { display: inline; }
+        .qty-controls button {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: none;
+            background: #3498db;
+            color: white;
+            cursor: pointer;
+            padding: 0;
+            font-size: 16px;
+            line-height: 28px;
+        }
+        .qty-controls .qty { font-weight: 600; min-width: 20px; text-align: center; font-size: 14px; }
+        .remove-btn {
+            background: #e74c3c !important;
+            margin-left: 8px;
+            width: 28px !important;
+            height: 28px !important;
+            border-radius: 50% !important;
+            padding: 0 !important;
+            font-size: 14px !important;
+            line-height: 28px !important;
+        }
+        .cart-total {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #2c3e50;
+            display: flex;
+            justify-content: space-between;
+            font-size: 20px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .checkout-form { margin-top: 20px; }
+        .checkout-btn {
+            width: 100%;
+            padding: 15px;
+            background: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .checkout-btn:hover { background: #229954; }
+        .checkout-btn:disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+        }
+        .empty-cart {
+            text-align: center;
+            color: #7f8c8d;
+            padding: 40px 0;
+            font-size: 14px;
+        }
+        @media (max-width: 768px) {
+            .container { flex-direction: column; }
+            .cart-section { position: static; }
+        }
+    </style>
+<base target="_blank">
+</head>
+<body>
+    <div class="header">
+        <h1>SBPOSS - Sales Transaction</h1>
+        <div class="nav">
+            <form method="GET" action="/sales"><button type="submit">Sales</button></form>
+            <form method="GET" action="/summary"><button type="submit">Daily Summary</button></form>
+            <form method="POST" action="/logout"><button type="submit">Logout</button></form>
+        </div>
+    </div>
+    <div class="container">
+        <div class="products-section">
+            <form method="GET" action="/sales" class="filters">
+                <input type="text" name="search" placeholder="Search products..." value="{{ search }}">
+                <button type="submit">Search</button>
+            </form>
+            <div class="category-buttons">
+                <form method="GET" action="/sales"><button type="submit" class="{% if not category %}active{% endif %}">All</button></form>
+                {% for cat in categories %}
+                <form method="GET" action="/sales">
+                    <input type="hidden" name="category" value="{{ cat }}">
+                    <button type="submit" class="{% if category == cat %}active{% endif %}">{{ cat }}</button>
+                </form>
+                {% endfor %}
+            </div>
+            <div class="product-grid">
+                {% for product in products %}
+                <div class="product-card">
+                    <div class="product-name">{{ product.name }}</div>
+                    <div class="product-price">₱{{ "%.2f"|format(product.price) }}</div>
+                    <div class="product-stock">Stock: {{ product.stock }}</div>
+                    <form method="POST" action="/sales">
+                        <input type="hidden" name="action" value="add">
+                        <input type="hidden" name="product_id" value="{{ product.id }}">
+                        <button type="submit">Add to Cart</button>
+                    </form>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="cart-section">
+            <div class="cart-title">Shopping Cart</div>
+            {% if cart %}
+                {% for item in cart %}
+                <div class="cart-item">
+                    <div class="cart-item-info">
+                        <div class="cart-item-name">{{ item.product.name }}</div>
+                        <div class="cart-item-price">₱{{ "%.2f"|format(item.product.price) }} each</div>
+                    </div>
+                    <div class="qty-controls">
+                        <form method="POST" action="/sales">
+                            <input type="hidden" name="action" value="decrease">
+                            <input type="hidden" name="product_id" value="{{ item.product.id }}">
+                            <button type="submit">-</button>
+                        </form>
+                        <span class="qty">{{ item.quantity }}</span>
+                        <form method="POST" action="/sales">
+                            <input type="hidden" name="action" value="increase">
+                            <input type="hidden" name="product_id" value="{{ item.product.id }}">
+                            <button type="submit">+</button>
+                        </form>
+                        <form method="POST" action="/sales">
+                            <input type="hidden" name="action" value="remove">
+                            <input type="hidden" name="product_id" value="{{ item.product.id }}">
+                            <button type="submit" class="remove-btn">×</button>
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+                <div class="cart-total">
+                    <span>Total:</span>
+                    <span>₱{{ "%.2f"|format(total) }}</span>
+                </div>
+                <form method="GET" action="/payment" class="checkout-form">
+                    <button type="submit" class="checkout-btn">Proceed Checkout</button>
+                </form>
+            {% else %}
+                <div class="empty-cart">Cart is empty</div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

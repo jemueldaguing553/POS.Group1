@@ -1,325 +1,616 @@
-from flask import Flask, render_template, request, redirect, session, jsonify
+"""
+SBPOSS - Small Business Point of Sale System
+Developed with Python Flask, HTML, CSS
+Applies OOP 4 Pillars: Abstraction, Encapsulation, Inheritance, Polymorphism
+"""
+
+from abc import ABC, abstractmethod
+from dataclasses import dataclass, field
 from datetime import datetime
-from abc import ABC, abstractmethod   # # Abstraction
+from typing import List, Dict, Optional
+import uuid
+
+from flask import Flask, render_template, request, redirect, url_for, session, flash
 
 app = Flask(__name__)
-app.secret_key = "secret123"
+app.secret_key = "sbpos_secret_key_2024"
 
+# =============================================================================
+# OOP PILLAR 1: ABSTRACTION - Abstract Base Classes define contracts
+# =============================================================================
 
-# ====== ABSTRACT CLASS ======
-class Person(ABC):
-    def __init__(self, name, user_id):
-        self._name = name
-        self._user_id = user_id
+class Entity(ABC):
+    """Abstract base class for all business entities."""
 
     @abstractmethod
-    def get_role(self):
+    def get_details(self) -> Dict:
+        """Return entity details as dictionary."""
+        pass
+
+    @abstractmethod
+    def get_display_name(self) -> str:
+        """Return human-readable name."""
         pass
 
 
-# ====== USER (INHERITANCE) ======
-class User(Person):
-    def __init__(self, name, user_id, role):
-        super().__init__(name, user_id)  # # inheritance using super
-        self.__role = role
+class POSOperations(ABC):
+    """Abstract interface defining all POS system operations."""
 
-    # # ENCAPSULATION (getters)
-    def get_name(self):
-        return self._name
+    @abstractmethod
+    def get_products(self, search: Optional[str] = None, category: Optional[str] = None) -> List:
+        pass
 
-    def get_user_id(self):
-        return self._user_id
+    @abstractmethod
+    def add_to_cart(self, product_id: str, quantity: int = 1) -> bool:
+        pass
 
-    def get_role(self):
-        return self.__role
+    @abstractmethod
+    def update_cart_quantity(self, product_id: str, quantity: int) -> bool:
+        pass
 
-    # # setters
-    def set_name(self, name):
-        self._name = name
+    @abstractmethod
+    def remove_from_cart(self, product_id: str) -> bool:
+        pass
 
-    def set_role(self, role):
-        self.__role = role
+    @abstractmethod
+    def get_cart_total(self) -> float:
+        pass
+
+    @abstractmethod
+    def checkout(self, cash_amount: float) -> Optional[object]:
+        pass
+
+    @abstractmethod
+    def get_daily_summary(self) -> Dict:
+        pass
 
 
-# ====== PRODUCT ======
-class Product:
-    def __init__(self, name, category, price):
+class ReceiptGenerator(ABC):
+    """Abstract class for receipt generation strategies."""
+
+    @abstractmethod
+    def generate(self, transaction) -> str:
+        """Generate receipt output from transaction."""
+        pass
+
+
+# =============================================================================
+# OOP PILLAR 2: ENCAPSULATION - Data hiding with private attributes
+# =============================================================================
+
+class Product(Entity):
+    """Encapsulated Product entity with controlled access to attributes."""
+
+    def __init__(self, product_id: str, name: str, price: float, category: str, stock: int):
+        self.__id = product_id
         self.__name = name
-        self.__category = category
         self.__price = price
+        self.__category = category
+        self.__stock = stock
 
-    def get_name(self):
+    # Getters (read-only access to private fields)
+    @property
+    def id(self) -> str:
+        return self.__id
+
+    @property
+    def name(self) -> str:
         return self.__name
 
-    def get_category(self):
-        return self.__category
-
-    def get_price(self):
+    @property
+    def price(self) -> float:
         return self.__price
 
+    @property
+    def category(self) -> str:
+        return self.__category
 
-# ====== CART ITEM ======
+    @property
+    def stock(self) -> int:
+        return self.__stock
+
+    # Controlled modifier with validation
+    def reduce_stock(self, quantity: int) -> bool:
+        if self.__stock >= quantity > 0:
+            self.__stock -= quantity
+            return True
+        return False
+
+    def get_details(self) -> Dict:
+        return {
+            "id": self.__id,
+            "name": self.__name,
+            "price": self.__price,
+            "category": self.__category,
+            "stock": self.__stock
+        }
+
+    def get_display_name(self) -> str:
+        return f"{self.__name} (₱{self.__price:.2f})"
+
+
 class CartItem:
-    def __init__(self, product, qty=1):
-        self.__product = product
-        self.__qty = qty
+    """Encapsulated cart item linking Product to purchase quantity."""
 
-    def get_product(self):
+    def __init__(self, product: Product, quantity: int):
+        self.__product = product
+        self.__quantity = quantity
+
+    @property
+    def product(self) -> Product:
         return self.__product
 
-    def get_qty(self):
-        return self.__qty
+    @property
+    def quantity(self) -> int:
+        return self.__quantity
 
-    def set_qty(self, qty):
-        self.__qty = qty
+    def update_quantity(self, quantity: int) -> bool:
+        if quantity > 0:
+            self.__quantity = quantity
+            return True
+        return False
 
-    # # POLYMORPHISM (method overriding example later)
-    def get_total(self):
-        return self.__product.get_price() * self.__qty
+    def get_subtotal(self) -> float:
+        return self.__product.price * self.__quantity
 
-
-# ====== DISCOUNT CART ITEM (POLYMORPHISM - OVERRIDING) ======
-class DiscountCartItem(CartItem):
-    def __init__(self, product, qty=1, discount=0.1):
-        super().__init__(product, qty)
-        self.__discount = discount
-
-    def get_total(self):  # # method overriding
-        original = super().get_total()
-        return original - (original * self.__discount)
+    def get_details(self) -> Dict:
+        return {
+            "product": self.__product.get_details(),
+            "quantity": self.__quantity,
+            "subtotal": self.get_subtotal()
+        }
 
 
-# ====== SALE ======
-class Sale:
-    def __init__(self, items, cash):
-        self.__items = items
-        self.__cash = cash
-        self.__total = self.calculate_total()  # # polymorphism usage
-        self.__change = cash - self.__total
-        self.__date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+class Transaction(Entity):
+    """Encapsulated Transaction entity representing a completed sale."""
 
-    # # POLYMORPHISM (method overloading style using default param)
-    def calculate_total(self, extra_fee=0):
-        return sum(i.get_total() for i in self.__items) + extra_fee
+    def __init__(self, items: List[CartItem], cash_given: float):
+        self.__id = str(uuid.uuid4())[:8].upper()
+        self.__date = datetime.now()
+        self.__items = items.copy()
+        self.__cash_given = cash_given
+        self.__total = sum(item.get_subtotal() for item in items)
+        self.__change = cash_given - self.__total
 
-    def get_items(self):
-        return self.__items
+    @property
+    def id(self) -> str:
+        return self.__id
 
-    def get_total(self):
-        return self.__total
-
-    def get_cash(self):
-        return self.__cash
-
-    def get_change(self):
-        return self.__change
-
-    def get_date(self):
+    @property
+    def date(self) -> datetime:
         return self.__date
 
+    @property
+    def items(self) -> List[CartItem]:
+        return self.__items.copy()
 
-# ====== STORE ======
-class Store:
+    @property
+    def total(self) -> float:
+        return self.__total
+
+    @property
+    def cash_given(self) -> float:
+        return self.__cash_given
+
+    @property
+    def change(self) -> float:
+        return self.__change
+
+    def get_details(self) -> Dict:
+        return {
+            "id": self.__id,
+            "date": self.__date.strftime("%Y-%m-%d %H:%M:%S"),
+            "items": [item.get_details() for item in self.__items],
+            "total": self.__total,
+            "cash_given": self.__cash_given,
+            "change": self.__change
+        }
+
+    def get_display_name(self) -> str:
+        return f"Transaction {self.__id} - ₱{self.__total:.2f}"
+
+
+class User(Entity):
+    """Encapsulated User entity for authentication."""
+
+    def __init__(self, username: str, password: str, full_name: str):
+        self.__username = username
+        self.__password = password
+        self.__full_name = full_name
+
+    @property
+    def username(self) -> str:
+        return self.__username
+
+    @property
+    def full_name(self) -> str:
+        return self.__full_name
+
+    def authenticate(self, username: str, password: str) -> bool:
+        return self.__username == username and self.__password == password
+
+    def get_details(self) -> Dict:
+        return {
+            "username": self.__username,
+            "full_name": self.__full_name
+        }
+
+    def get_display_name(self) -> str:
+        return self.__full_name
+
+
+# =============================================================================
+# OOP PILLAR 3: INHERITANCE - Derived classes extend base functionality
+# =============================================================================
+
+class BasePOS(POSOperations):
+    """Base POS class with common functionality. Inherited by concrete implementations."""
+
     def __init__(self):
-        self.__users = []
-        self.__products = []
-        self.__sales = []
+        self._products: List[Product] = []
+        self._cart: List[CartItem] = []
+        self._transactions: List[Transaction] = []
+        self._initialize_products()
 
-    # USERS
-    def add_user(self, user):
-        self.__users.append(user)
+    def _initialize_products(self):
+        """Initialize default product catalog."""
+        self._products = [
+            Product("P001", "Milo", 10.00, "Beverages", 40),
+            Product("P002", "Youngs Twon Sardines", 26.00, "Food", 50),
+            Product("P003", "Bearbrand", 13.00, "Beverages", 45),
+            Product("P004", "Kopiko Blanca Twin pack", 16.00, "Beverages", 40),
+            Product("P005", "Shampoo", 8.00, "Personal Care", 60),
+            Product("P006", "Soap", 25.00, "Personal Care", 33),
+            Product("P007", "Lava Cake", 10.00, "Food", 55),
+            Product("P008", "Lucky 7 Carne Norte", 27.00, "Food", 150),
+            Product("P009", "Freska Tuna", 35.00, "Food", 35),
+            Product("P010", "Soft Drink", 15.00, "Beverages", 40),
+        ]   
 
-    def find_user(self, user_id):
-        for u in self.__users:
-            if u.get_user_id() == user_id:
-                return u
-        return None
+    def get_categories(self) -> List[str]:
+        return sorted(list(set(p.category for p in self._products)))
 
-    # PRODUCTS
-    def add_product(self, product):
-        self.__products.append(product)
+    def get_products(self, search: Optional[str] = None, category: Optional[str] = None) -> List[Product]:
+        result = self._products
+        if category and category != "All":
+            result = [p for p in result if p.category == category]
+        if search:
+            search_lower = search.lower()
+            result = [p for p in result if search_lower in p.name.lower()]
+        return result
 
-    def get_products(self):
-        return self.__products
+    def get_cart(self) -> List[CartItem]:
+        return self._cart.copy()
 
-    # SALES
-    def add_sale(self, sale):
-        self.__sales.append(sale)
+    def get_cart_total(self) -> float:
+        return sum(item.get_subtotal() for item in self._cart)
 
-    def get_sales(self):
-        return self.__sales
+    def clear_cart(self):
+        self._cart = []
 
+    def get_transactions(self) -> List[Transaction]:
+        return self._transactions.copy()
 
-# ====== STORE INSTANCE ======
-store = Store()
-
-# preload products
-store.add_product(Product("Rice", "Groceries", 45))
-store.add_product(Product("Soft Drinks", "Beverages", 18))
-store.add_product(Product("Canned Sardines", "Groceries", 20))
-store.add_product(Product("Chips", "Snacks", 15))
-store.add_product(Product("Detergent", "Household", 25))
-
-
-# ====== LOGIN ======
-@app.route("/", methods=["GET", "POST"])
-def login():
-    if request.method == "POST":
-        user_id = request.form.get("userId")
-
-        user = store.find_user(user_id)
-
-        if not user:
-            return "User not found!"
-
-        session["user"] = user.get_user_id()
-        session["cart"] = []
-
-        return redirect("/sales")
-
-    return render_template("login.html")
+    def get_transaction_by_id(self, trans_id: str) -> Optional[Transaction]:
+        return next((t for t in self._transactions if t.id == trans_id), None)
 
 
-# ====== REGISTER ======
-@app.route("/register", methods=["POST"])
-def register():
-    name = request.form.get("name")
-    user_id = request.form.get("userId")
-    role = request.form.get("role")
+class POSSystem(BasePOS):
+    """
+    Concrete POS System inheriting from BasePOS.
+    Implements all abstract methods with full business logic.
+    """
 
-    if store.find_user(user_id):
-        return "User already exists!"
+    def add_to_cart(self, product_id: str, quantity: int = 1) -> bool:
+        product = next((p for p in self._products if p.id == product_id), None)
+        if not product or product.stock < quantity:
+            return False
 
-    store.add_user(User(name, user_id, role))
-    return redirect("/")
-
-
-# ====== SALES ======
-@app.route("/sales")
-def sales_page():
-    products = store.get_products()
-
-    product_list = [
-        {
-            "name": p.get_name(),
-            "category": p.get_category(),
-            "price": p.get_price()
-        }
-        for p in products
-    ]
-
-    return render_template("sales.html", products=product_list)
-
-
-# ====== ADD TO CART ======
-@app.route("/add-to-cart", methods=["POST"])
-def add_to_cart():
-    data = request.json
-    name = data["name"]
-
-    product = next((p for p in store.get_products() if p.get_name() == name), None)
-
-    if not product:
-        return jsonify({"error": "Product not found"}), 404  # # FIXED ERROR HANDLING
-
-    cart = session.get("cart", [])
-
-    found = next((i for i in cart if i["name"] == name), None)
-
-    if found:
-        found["qty"] += 1
-    else:
-        cart.append({
-            "name": product.get_name(),
-            "price": product.get_price(),
-            "qty": 1
-        })
-
-    session["cart"] = cart
-    return jsonify(cart)
-
-
-# ====== PAYMENT ======
-@app.route("/payment")
-def payment():
-    cart = session.get("cart", [])
-    total = sum(i["price"] * i["qty"] for i in cart)
-
-    return render_template("payment.html", total=total)
-
-
-# ====== PAY ======
-@app.route("/pay", methods=["POST"])
-def pay():
-    cash = float(request.form.get("cash"))
-    cart_data = session.get("cart", [])
-
-    items = []
-
-    for c in cart_data:
-        product = Product(c["name"], "", c["price"])
-
-        # # Example: use polymorphism (normal vs discounted)
-        if c["qty"] >= 5:
-            items.append(DiscountCartItem(product, c["qty"]))  # # overriding used
+        existing = next((item for item in self._cart if item.product.id == product_id), None)
+        if existing:
+            new_qty = existing.quantity + quantity
+            if product.stock >= new_qty:
+                existing.update_quantity(new_qty)
+                return True
+            return False
         else:
-            items.append(CartItem(product, c["qty"]))
+            self._cart.append(CartItem(product, quantity))
+            return True
 
-    sale = Sale(items, cash)
+    def update_cart_quantity(self, product_id: str, quantity: int) -> bool:
+        item = next((item for item in self._cart if item.product.id == product_id), None)
+        if not item:
+            return False
 
-    if sale.get_cash() < sale.get_total():
-        return "Not enough cash!"
+        if quantity <= 0:
+            self._cart.remove(item)
+            return True
 
-    store.add_sale(sale)
+        product = next((p for p in self._products if p.id == product_id), None)
+        if product and product.stock >= quantity:
+            item.update_quantity(quantity)
+            return True
+        return False
 
-    session["lastSale"] = {
-        "items": [
-            {
-                "name": i.get_product().get_name(),
-                "qty": i.get_qty(),
-                "price": i.get_product().get_price()
-            }
-            for i in sale.get_items()
-        ],
-        "total": sale.get_total(),
-        "cash": sale.get_cash(),
-        "change": sale.get_change(),
-        "date": sale.get_date()
-    }
+    def remove_from_cart(self, product_id: str) -> bool:
+        item = next((item for item in self._cart if item.product.id == product_id), None)
+        if item:
+            self._cart.remove(item)
+            return True
+        return False
 
-    session["cart"] = []
+    def checkout(self, cash_amount: float) -> Optional[Transaction]:
+        if not self._cart or cash_amount < self.get_cart_total():
+            return None
 
-    return redirect("/receipt")
+        # Deduct stock
+        for item in self._cart:
+            item.product.reduce_stock(item.quantity)
 
+        transaction = Transaction(self._cart, cash_amount)
+        self._transactions.append(transaction)
+        self._cart = []
+        return transaction
 
-# ====== RECEIPT ======
-@app.route("/receipt")
-def receipt():
-    sale = session.get("lastSale")
-    return render_template("receipt.html", sale=sale)
-
-
-# ====== SUMMARY ======
-@app.route("/summary")
-def summary():
-    sales_data = [
-        {
-            "total": s.get_total(),
-            "date": s.get_date()
+    def get_daily_summary(self) -> Dict:
+        today = datetime.now().date()
+        today_trans = [t for t in self._transactions if t.date.date() == today]
+        return {
+            "count": len(today_trans),
+            "total": sum(t.total for t in today_trans),
+            "transactions": today_trans
         }
-        for s in store.get_sales()
-    ]
 
-    return render_template("sales-summary.html", sales=sales_data)
+    def get_all_summary(self) -> Dict:
+        return {
+            "count": len(self._transactions),
+            "total": sum(t.total for t in self._transactions),
+            "transactions": self._transactions
+        }
 
 
-# ====== LOGOUT ======
-@app.route("/logout")
+class TextReceiptGenerator(ReceiptGenerator):
+    """Concrete receipt generator creating text-based receipt output."""
+
+    def generate(self, transaction: Transaction) -> str:
+        lines = [
+            "=" * 40,
+            "SBPOSS STORE",
+            "123 Main Street, City",
+            "Tel: (123) 456-7890",
+            "=" * 40,
+            f"Trans ID: {transaction.id}",
+            f"Date: {transaction.date.strftime('%Y-%m-%d %H:%M:%S')}",
+            "-" * 40,
+        ]
+        for item in transaction.items:
+            lines.append(f"{item.product.name:<20} {item.quantity:>3} ₱{item.get_subtotal():>7.2f}")
+        lines.extend([
+            "-" * 40,
+            f"{'Total:':<30} ₱{transaction.total:>7.2f}",
+            f"{'Cash:':<30} ₱{transaction.cash_given:>7.2f}",
+            f"{'Change:':<30} ₱{transaction.change:>7.2f}",
+            "=" * 40,
+            "Thank you for your purchase!",
+            "Please come again",
+        ])
+        return "\n".join(lines)
+
+
+# =============================================================================
+# OOP PILLAR 4: POLYMORPHISM - Same interface, different implementations
+# =============================================================================
+
+class POSController:
+    """
+    Polymorphic controller that works with any POSOperations implementation.
+    Demonstrates polymorphism by accepting any object that implements POSOperations.
+    """
+
+    def __init__(self, pos_system: POSOperations, receipt_generator: ReceiptGenerator):
+        self._pos = pos_system
+        self._receipt_gen = receipt_generator
+
+    def process_sale(self, product_id: str) -> bool:
+        return self._pos.add_to_cart(product_id, 1)
+
+    def complete_checkout(self, cash: float) -> Optional[Transaction]:
+        return self._pos.checkout(cash)
+
+    def generate_receipt_text(self, transaction: Transaction) -> str:
+        return self._receipt_gen.generate(transaction)
+
+    @property
+    def pos(self) -> POSOperations:
+        return self._pos
+
+
+# =============================================================================
+# APPLICATION SETUP - Singleton instances for single-user access
+# =============================================================================
+
+# Single user for authentication
+cashier_user = User("cashier", "1001", "Cashier")
+
+# Single POS system instance (single-user design)
+pos_system = POSSystem()
+receipt_generator = TextReceiptGenerator()
+controller = POSController(pos_system, receipt_generator)
+
+# =============================================================================
+# FLASK ROUTES
+# =============================================================================
+
+@app.route("/")
+def index():
+    if "logged_in" in session:
+        return redirect(url_for("sales"))
+    return redirect(url_for("login"))
+
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    error = None
+    if request.method == "POST":
+        username = request.form.get("username", "")
+        password = request.form.get("password", "")
+        if cashier_user.authenticate(username, password):
+            session["logged_in"] = True
+            session["username"] = cashier_user.username
+            return redirect(url_for("sales"))
+        else:
+            error = "Invalid username or password"
+    return render_template("login.html", error=error)
+
+
+@app.route("/logout", methods=["POST"])
 def logout():
     session.clear()
-    return redirect("/")
+    return redirect(url_for("login"))
 
 
-# ====== RUN ======
+@app.route("/sales", methods=["GET", "POST"])
+def sales():
+    if "logged_in" not in session:
+        return redirect(url_for("login"))
+
+    if request.method == "POST":
+        action = request.form.get("action")
+        product_id = request.form.get("product_id")
+
+        if action == "add":
+            controller.process_sale(product_id)
+        elif action == "increase":
+            item = next((i for i in pos_system.get_cart() if i.product.id == product_id), None)
+            if item:
+                pos_system.update_cart_quantity(product_id, item.quantity + 1)
+        elif action == "decrease":
+            item = next((i for i in pos_system.get_cart() if i.product.id == product_id), None)
+            if item:
+                pos_system.update_cart_quantity(product_id, item.quantity - 1)
+        elif action == "remove":
+            pos_system.remove_from_cart(product_id)
+
+        return redirect(url_for("sales", **{k: v for k, v in request.args.items()}))
+
+    search = request.args.get("search", "")
+    category = request.args.get("category", "")
+    products = pos_system.get_products(search=search, category=category)
+    categories = pos_system.get_categories()
+    cart = pos_system.get_cart()
+    total = pos_system.get_cart_total()
+
+    return render_template(
+        "sales.html",
+        products=products,
+        categories=categories,
+        cart=cart,
+        total=total,
+        search=search,
+        category=category
+    )
+
+
+@app.route("/payment", methods=["GET", "POST"])
+def payment():
+    if "logged_in" not in session:
+        return redirect(url_for("login"))
+
+    total = pos_system.get_cart_total()
+    if total == 0:
+        return redirect(url_for("sales"))
+
+    if "payment_input" not in session:
+        session["payment_input"] = ""
+
+    error = None
+    change = None
+
+    if request.method == "POST":
+        action = request.form.get("action")
+        digit = request.form.get("digit")
+
+        if digit is not None:
+            current = session.get("payment_input", "")
+            if digit == "C":
+                session["payment_input"] = ""
+            elif digit == ".":
+                if "." not in current:
+                    session["payment_input"] = current + digit
+            else:
+                session["payment_input"] = current + digit
+            session.modified = True
+
+        elif action == "confirm":
+            current = session.get("payment_input", "")
+            try:
+                cash = float(current) if current else 0.0
+                if cash < total:
+                    error = f"Payment insufficient. Need ₱{total:.2f}"
+                    change = cash - total
+                else:
+                    transaction = controller.complete_checkout(cash)
+                    if transaction:
+                        session.pop("payment_input", None)
+                        return redirect(url_for("receipt", trans_id=transaction.id))
+                    else:
+                        error = "Checkout failed"
+            except ValueError:
+                error = "Invalid amount"
+
+    current_input = session.get("payment_input", "")
+    if current_input:
+        try:
+            cash_val = float(current_input)
+            change = cash_val - total
+        except ValueError:
+            change = None
+
+    return render_template(
+        "payment.html",
+        total=total,
+        current_input=current_input if current_input else "0.00",
+        change=change,
+        error=error
+    )
+
+
+@app.route("/receipt/<trans_id>")
+def receipt(trans_id):
+    if "logged_in" not in session:
+        return redirect(url_for("login"))
+
+    transaction = pos_system.get_transaction_by_id(trans_id)
+    if not transaction:
+        return redirect(url_for("sales"))
+
+    return render_template("receipt.html", transaction=transaction)
+
+
+@app.route("/summary")
+def summary():
+    if "logged_in" not in session:
+        return redirect(url_for("login"))
+
+    search_id = request.args.get("search_id", "")
+    daily = pos_system.get_daily_summary()
+    all_summary = pos_system.get_all_summary()
+
+    if search_id:
+        transactions = [t for t in all_summary["transactions"] if search_id.upper() in t.id]
+    else:
+        transactions = all_summary["transactions"]
+
+    return render_template(
+        "summary.html",
+        transactions=transactions,
+        today_total=daily["total"],
+        today_count=daily["count"],
+        all_total=all_summary["total"],
+        search_id=search_id
+    )
+
+
+# For Vercel deployment
 if __name__ == "__main__":
     app.run(debug=True)

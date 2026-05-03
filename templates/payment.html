@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SBPOSS - Cash Payment</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f6fa;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .payment-container {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .header h1 { color: #2c3e50; font-size: 24px; }
+        .total-display {
+            background: #2c3e50;
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .total-display .label { font-size: 14px; opacity: 0.8; }
+        .total-display .amount { font-size: 32px; font-weight: bold; margin-top: 5px; }
+        .input-display {
+            background: #ecf0f1;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: right;
+            font-size: 28px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            min-height: 60px;
+            word-break: break-all;
+        }
+        .keypad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .keypad form { display: contents; }
+        .keypad button {
+            padding: 20px;
+            font-size: 20px;
+            border: none;
+            background: #ecf0f1;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        .keypad button:hover { background: #d5dbdb; }
+        .keypad button.action {
+            background: #e74c3c;
+            color: white;
+        }
+        .keypad button.action:hover { background: #c0392b; }
+        .change-display {
+            text-align: center;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        .change-display.has-change {
+            background: #d4edda;
+            color: #155724;
+        }
+        .change-display.no-change {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .confirm-form { margin-bottom: 15px; }
+        .confirm-btn {
+            width: 100%;
+            padding: 15px;
+            background: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .confirm-btn:hover { background: #229954; }
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        .nav-buttons form { flex: 1; }
+        .nav-buttons button {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            background: #95a5a6;
+            color: white;
+        }
+        .nav-buttons button:hover { background: #7f8c8d; }
+        .error { 
+            color: #e74c3c; 
+            text-align: center; 
+            margin-bottom: 15px; 
+            font-weight: 600;
+            padding: 10px;
+            background: #fdeaea;
+            border-radius: 5px;
+        }
+    </style>
+<base target="_blank">
+</head>
+<body>
+    <div class="payment-container">
+        <div class="header">
+            <h1>Cash Payment</h1>
+        </div>
+        <div class="total-display">
+            <div class="label">Total Amount</div>
+            <div class="amount">₱{{ "%.2f"|format(total) }}</div>
+        </div>
+        <div class="input-display">₱{{ current_input }}</div>
+        {% if error %}
+        <div class="error">{{ error }}</div>
+        {% endif %}
+        {% if change is not none %}
+        <div class="change-display {% if change >= 0 %}has-change{% else %}no-change{% endif %}">
+            {% if change >= 0 %}
+            Change: ₱{{ "%.2f"|format(change) }}
+            {% else %}
+            Insufficient payment!
+            {% endif %}
+        </div>
+        {% endif %}
+        <div class="keypad">
+            <form method="POST" action="/payment"><input type="hidden" name="digit" value="1"><button type="submit">1</button></form>
+            <form method="POST" action="/payment"><input type="hidden" name="digit" value="2"><button type="submit">2</button></form>
+            <form method="POST" action="/payment"><input type="hidden" name="digit" value="3"><button type="submit">3</button></form>
+            <form method="POST" action="/payment"><input type="hidden" name="digit" value="4"><button type="submit">4</button></form>
+            <form method="POST" action="/payment"><input type="hidden" name="digit" value="5"><button type="submit">5</button></form>
+            <form method="POST" action="/payment"><input type="hidden" name="digit" value="6"><button type="submit">6</button></form>
+            <form method="POST" action="/payment"><input type="hidden" name="digit" value="7"><button type="submit">7</button></form>
+            <form method="POST" action="/payment"><input type="hidden" name="digit" value="8"><button type="submit">8</button></form>
+            <form method="POST" action="/payment"><input type="hidden" name="digit" value="9"><button type="submit">9</button></form>
+            <form method="POST" action="/payment"><input type="hidden" name="digit" value="C"><button type="submit" class="action">C</button></form>
+            <form method="POST" action="/payment"><input type="hidden" name="digit" value="0"><button type="submit">0</button></form>
+            <form method="POST" action="/payment"><input type="hidden" name="digit" value="."><button type="submit">.</button></form>
+        </div>
+        <form method="POST" action="/payment" class="confirm-form">
+            <input type="hidden" name="action" value="confirm">
+            <button type="submit" class="confirm-btn">Confirm Payment</button>
+        </form>
+        <div class="nav-buttons">
+            <form method="GET" action="/sales"><button type="submit">Back to Sales</button></form>
+        </div>
+    </div>
+</body>
+</html>
