@@ -3,8 +3,8 @@
 
 # POS Group 1 - Small Business Point of Sale System
 
-BSCS 1A: Group 1
-Members
+### BSCS 1A: Group 1
+Members: 
 Angel Paquibot
 Guibao
 Daguing
