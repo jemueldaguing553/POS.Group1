@@ -268,7 +268,7 @@ class BasePOS(POSOperations):
         ]   
 
     def get_categories(self) -> List[str]:
-        return sorted(list(set(p.category for p in self._products)))
+              return sorted(list(set(p.category for p in self._products)))
 
     def get_products(self, search: Optional[str] = None, category: Optional[str] = None) -> List[Product]:
         result = self._products
