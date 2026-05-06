@@ -1,3 +1,8 @@
+""""
+SBPOSS - Small Business Point of Sale System
+Developed with python Flask, HTML, CSS
+Applies OOP 4 Pillars: Abstraction, Encapsulation, Inheritance, Polymorphism
+"""
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
