@@ -1,6 +1,6 @@
-""""
+"""
 SBPOSS - Small Business Point of Sale System
-Developed with python Flask, HTML, CSS
+Developed with Python Flask, HTML, CSS
 Applies OOP 4 Pillars: Abstraction, Encapsulation, Inheritance, Polymorphism
 """
 
@@ -244,7 +244,6 @@ class User(Entity):
 # =============================================================================
 
 class BasePOS(POSOperations):
-    """Base POS class with common functionality. Inherited by concrete implementations."""
 
     def __init__(self):
         self._products: List[Product] = []
@@ -253,7 +252,6 @@ class BasePOS(POSOperations):
         self._initialize_products()
 
     def _initialize_products(self):
-        """Initialize default product catalog."""
         self._products = [
             Product("P001", "Milo", 10.00, "Beverages", 40),
             Product("P002", "Youngs Town Sardines", 26.00, "Food", 50),
@@ -265,18 +263,21 @@ class BasePOS(POSOperations):
             Product("P008", "Lucky 7 Carne Norte", 27.00, "Food", 150),
             Product("P009", "Freska Tuna", 35.00, "Food", 35),
             Product("P010", "Soft Drink", 15.00, "Beverages", 40),
-        ]   
+        ]
 
     def get_categories(self) -> List[str]:
-              return sorted(list(set(p.category for p in self._products)))
+        return sorted(list(set(p.category for p in self._products)))
 
     def get_products(self, search: Optional[str] = None, category: Optional[str] = None) -> List[Product]:
         result = self._products
+
         if category and category != "All":
             result = [p for p in result if p.category == category]
+
         if search:
             search_lower = search.lower()
             result = [p for p in result if search_lower in p.name.lower()]
+
         return result
 
     def get_cart(self) -> List[CartItem]:
@@ -296,17 +297,15 @@ class BasePOS(POSOperations):
 
 
 class POSSystem(BasePOS):
-    """
-    Concrete POS System inheriting from BasePOS.
-    Implements all abstract methods with full business logic.
-    """
 
     def add_to_cart(self, product_id: str, quantity: int = 1) -> bool:
         product = next((p for p in self._products if p.id == product_id), None)
+
         if not product or product.stock < quantity:
             return False
 
         existing = next((item for item in self._cart if item.product.id == product_id), None)
+
         if existing:
             new_qty = existing.quantity + quantity
             if product.stock >= new_qty:
@@ -319,6 +318,7 @@ class POSSystem(BasePOS):
 
     def update_cart_quantity(self, product_id: str, quantity: int) -> bool:
         item = next((item for item in self._cart if item.product.id == product_id), None)
+
         if not item:
             return False
 
@@ -327,23 +327,26 @@ class POSSystem(BasePOS):
             return True
 
         product = next((p for p in self._products if p.id == product_id), None)
+
         if product and product.stock >= quantity:
             item.update_quantity(quantity)
             return True
+
         return False
 
     def remove_from_cart(self, product_id: str) -> bool:
         item = next((item for item in self._cart if item.product.id == product_id), None)
+
         if item:
             self._cart.remove(item)
             return True
+
         return False
 
     def checkout(self, cash_amount: float) -> Optional[Transaction]:
         if not self._cart or cash_amount < self.get_cart_total():
             return None
 
-        # Deduct stock
         for item in self._cart:
             item.product.reduce_stock(item.quantity)
 
@@ -355,6 +358,7 @@ class POSSystem(BasePOS):
     def get_daily_summary(self) -> Dict:
         today = datetime.now().date()
         today_trans = [t for t in self._transactions if t.date.date() == today]
+
         return {
             "count": len(today_trans),
             "total": sum(t.total for t in today_trans),
@@ -370,7 +374,6 @@ class POSSystem(BasePOS):
 
 
 class TextReceiptGenerator(ReceiptGenerator):
-    """Concrete receipt generator creating text-based receipt output."""
 
     def generate(self, transaction: Transaction) -> str:
         lines = [
@@ -383,8 +386,10 @@ class TextReceiptGenerator(ReceiptGenerator):
             f"Date: {transaction.date.strftime('%Y-%m-%d %H:%M:%S')}",
             "-" * 40,
         ]
+
         for item in transaction.items:
             lines.append(f"{item.product.name:<20} {item.quantity:>3} ₱{item.get_subtotal():>7.2f}")
+
         lines.extend([
             "-" * 40,
             f"{'Total:':<30} ₱{transaction.total:>7.2f}",
@@ -394,18 +399,11 @@ class TextReceiptGenerator(ReceiptGenerator):
             "Thank you for your purchase!",
             "Please come again",
         ])
+
         return "\n".join(lines)
 
 
-# =============================================================================
-# OOP PILLAR 4: POLYMORPHISM - Same interface, different implementations
-# =============================================================================
-
 class POSController:
-    """
-    Polymorphic controller that works with any POSOperations implementation.
-    Demonstrates polymorphism by accepting any object that implements POSOperations.
-    """
 
     def __init__(self, pos_system: POSOperations, receipt_generator: ReceiptGenerator):
         self._pos = pos_system
@@ -426,19 +424,19 @@ class POSController:
 
 
 # =============================================================================
-# APPLICATION SETUP - Singleton instances for single-user access
+# APPLICATION SETUP
 # =============================================================================
 
-# Users for authentication. New signups are stored in memory for this app run.
 cashier_user = User("cashier", "1001", "Cashier")
+
 users = {
     cashier_user.username: cashier_user
 }
 
-# Single POS system instance (single-user design)
 pos_system = POSSystem()
 receipt_generator = TextReceiptGenerator()
 controller = POSController(pos_system, receipt_generator)
+
 
 # =============================================================================
 # FLASK ROUTES
@@ -454,16 +452,20 @@ def index():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     error = None
+
     if request.method == "POST":
         username = request.form.get("username", "")
         password = request.form.get("password", "")
+
         user = users.get(username)
+
         if user and user.authenticate(username, password):
             session["logged_in"] = True
             session["username"] = user.username
             return redirect(url_for("sales"))
         else:
             error = "Invalid username or password"
+
     return render_template("login.html", error=error)
 
 
@@ -489,6 +491,7 @@ def signup():
         return render_template("signUp.html", error="Username already exists")
 
     users[username] = User(username, password, full_name)
+
     return render_template("signUp.html", success="Account created successfully. You can now log in.")
 
 
@@ -527,14 +530,17 @@ def sales():
 
         if action == "add":
             controller.process_sale(product_id)
+
         elif action == "increase":
             item = next((i for i in pos_system.get_cart() if i.product.id == product_id), None)
             if item:
                 pos_system.update_cart_quantity(product_id, item.quantity + 1)
+
         elif action == "decrease":
             item = next((i for i in pos_system.get_cart() if i.product.id == product_id), None)
             if item:
                 pos_system.update_cart_quantity(product_id, item.quantity - 1)
+
         elif action == "remove":
             pos_system.remove_from_cart(product_id)
 
@@ -542,6 +548,7 @@ def sales():
 
     search = request.args.get("search", "")
     category = request.args.get("category", "")
+
     products = pos_system.get_products(search=search, category=category)
     categories = pos_system.get_categories()
     cart = pos_system.get_cart()
@@ -564,6 +571,7 @@ def payment():
         return redirect(url_for("login"))
 
     total = pos_system.get_cart_total()
+
     if total == 0:
         return redirect(url_for("sales"))
 
@@ -579,33 +587,41 @@ def payment():
 
         if digit is not None:
             current = session.get("payment_input", "")
+
             if digit == "C":
                 session["payment_input"] = ""
+
             elif digit == ".":
                 if "." not in current:
                     session["payment_input"] = current + digit
             else:
                 session["payment_input"] = current + digit
+
             session.modified = True
 
         elif action == "confirm":
             current = session.get("payment_input", "")
+
             try:
                 cash = float(current) if current else 0.0
+
                 if cash < total:
                     error = f"Payment insufficient. Need ₱{total:.2f}"
                     change = cash - total
                 else:
                     transaction = controller.complete_checkout(cash)
+
                     if transaction:
                         session.pop("payment_input", None)
                         return redirect(url_for("receipt", trans_id=transaction.id))
                     else:
                         error = "Checkout failed"
+
             except ValueError:
                 error = "Invalid amount"
 
     current_input = session.get("payment_input", "")
+
     if current_input:
         try:
             cash_val = float(current_input)
@@ -628,6 +644,7 @@ def receipt(trans_id):
         return redirect(url_for("login"))
 
     transaction = pos_system.get_transaction_by_id(trans_id)
+
     if not transaction:
         return redirect(url_for("sales"))
 
@@ -640,6 +657,7 @@ def summary():
         return redirect(url_for("login"))
 
     search_id = request.args.get("search_id", "")
+
     daily = pos_system.get_daily_summary()
     all_summary = pos_system.get_all_summary()
 
@@ -656,6 +674,7 @@ def summary():
         all_total=all_summary["total"],
         search_id=search_id
     )
+
 
 # For Vercel deployment
 if __name__ == "__main__":
